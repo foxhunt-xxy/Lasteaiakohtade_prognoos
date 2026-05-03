@@ -68,6 +68,14 @@ Statistikaameti API tabelid:
 
 ## Projekti käivitamine
 
+NB! Projektis kasutatakse kahte erinevat terminali:
+
+* Python/ETL käsud võib käivitada VS Code devcontaineri terminalis.
+* Docker Compose käsud tuleb praeguses seadistuses käivitada host-arvuti terminalis, näiteks Windows PowerShellis, sest devcontaineris ei ole `docker` käsk saadaval.
+
+Windows PowerShellis liigu projekti juurkausta ehk kausta, kus asub docker-compose.yml.
+
+
 ### 1. Paigalda Python sõltuvused
 
 ```bash
@@ -78,9 +86,19 @@ pip install -r requirements.txt
 
 ### 2. Käivita PostgreSQL ja Superset
 
-```bash
+Käivita Docker Compose host-arvuti terminalis, näiteks Windows PowerShellis projekti juurkaustas:
+
+```powershell
 docker compose up -d
 ```
+
+Kontrolli, kas teenused töötavad:
+
+```powershell
+docker compose ps
+```
+
+Oodatav tulemus on, et `lasteaiakohad_postgres` ja `lasteaiakohad_superset` on üleval. Host-arvutis kasutab PostgreSQL porti `5433` ja Superset porti `8089`.
 
 ---
 
@@ -99,11 +117,21 @@ See samm:
 
 ---
 
-### 4. Laadi andmed PostgreSQL-i
+### 4. Lae andmed PostgreSQL-i
 
-```bash
+Kui käivitad käsu host-arvuti terminalis, näiteks Windows PowerShellis, kasuta:
+
+```powershell
 python etl/load_to_postgres.py
 ```
+
+Kui käivitad käsu VS Code devcontaineri terminalis, kasuta:
+
+```bash
+DB_URL="postgresql+psycopg2://postgres:postgres@host.docker.internal:5433/lasteaiakohad" python etl/load_to_postgres.py
+```
+
+`load_to_postgres.py` loeb andmebaasi aadressi `DB_URL` keskkonnamuutujast. Kui `DB_URL` ei ole määratud, kasutatakse vaikimisi ühendust `localhost:5433`, mis sobib host-arvuti terminalist käivitamiseks.
 
 ---
 
@@ -111,8 +139,8 @@ python etl/load_to_postgres.py
 
 Brauseris:
 
-```
-http://localhost:8088
+```text
+http://localhost:8089
 ```
 
 **Login:**
@@ -127,13 +155,39 @@ http://localhost:8088
 Connection string:
 
 ```text
-postgresql://postgres:postgres@postgres:5432/lasteaiakohad
+postgresql+psycopg2://postgres:postgres@postgres:5432/lasteaiakohad
 ```
+
+Kui Superset küsib ühenduse andmeid eraldi väljadena, kasuta:
+
+* Host: `postgres`
+* Port: `5432`
+* Database name: `lasteaiakohad`
+* Username: `postgres`
+* Password: `postgres`
 
 NB:
 
-* Superseti sees on host `postgres`
-* Kui ühendud otse arvutist, kasuta porti `5433`
+* Superseti kasutaja `admin/admin` on Superseti veebiliidese jaoks.
+* PostgreSQL kasutaja on `postgres/postgres`.
+* Superseti sees on PostgreSQL host `postgres`, sest mõlemad teenused töötavad samas Docker Compose võrgus.
+* Kui ühendud PostgreSQL-iga otse host-arvutist, kasuta porti `5433`.
+
+---
+
+### 7. Kontrolli ühendust SQL Labis
+
+Supersetis ava SQL Lab ja käivita kontrollpäring:
+
+```sql
+SELECT * FROM summary LIMIT 10;
+
+#Kõigi tabelite kontrollimiseks:
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema='public'
+ORDER BY table_name;
+```
 
 ---
 
