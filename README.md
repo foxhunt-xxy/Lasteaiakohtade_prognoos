@@ -74,6 +74,24 @@ NB! Projektis kasutatakse kahte erinevat terminali:
 * Docker Compose käsud tuleb praeguses seadistuses käivitada host-arvuti terminalis, näiteks Windows PowerShellis, sest devcontaineris ei ole `docker` käsk saadaval.
 
 Windows PowerShellis liigu projekti juurkausta ehk kausta, kus asub docker-compose.yml.
+# Käivita Docker Engine
+
+Enne Docker Compose käivitamist peab töötama Docker Engine ehk Docker Desktop.
+
+## Windowsis:
+
+1. Ava Docker Desktop
+2. Oota kuni kuvatakse:
+
+```text
+Engine running
+```
+
+või
+
+```text
+Docker Desktop is running
+```
 
 ### 0. Projekti avamine
 
